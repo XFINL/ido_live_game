@@ -20,12 +20,12 @@ const MainPage = () => {
       <div className="p-6">
         <div
           className="backdrop-blur-xl rounded-3xl p-6 shadow-2xl border border-gray-800 mb-6"
-          style={{ backgroundColor: 'rgba(23, 23, 23, 0.9)' }}
+          style={{ backgroundColor: 'rgba(23, 23, 23, 0.9)', borderColor: 'rgb(23, 23, 23)' }}
         >
           <div className="flex items-center gap-4">
             <div
               className="w-20 h-20 rounded-full border border-gray-700 flex items-center justify-center"
-              style={{ backgroundColor: 'rgb(23, 23, 23)' }}
+              style={{ backgroundColor: 'rgb(23, 23, 23)', borderColor: 'rgb(23, 23, 23)' }}
             >
               <span className="text-2xl text-white">
                 {gender === 'male' ? '男' : '女'}
@@ -41,14 +41,14 @@ const MainPage = () => {
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div
             className="backdrop-blur-xl rounded-2xl p-5 shadow-xl border border-gray-800"
-            style={{ backgroundColor: 'rgba(23, 23, 23, 0.8)' }}
+            style={{ backgroundColor: 'rgba(23, 23, 23, 0.8)', borderColor: 'rgb(23, 23, 23)' }}
           >
             <div className="text-gray-500 text-sm mb-2">粉丝数</div>
             <div className="text-3xl font-bold text-white">0</div>
           </div>
           <div
             className="backdrop-blur-xl rounded-2xl p-5 shadow-xl border border-gray-800"
-            style={{ backgroundColor: 'rgba(23, 23, 23, 0.8)' }}
+            style={{ backgroundColor: 'rgba(23, 23, 23, 0.8)', borderColor: 'rgb(23, 23, 23)' }}
           >
             <div className="text-gray-500 text-sm mb-2">人气值</div>
             <div className="text-3xl font-bold text-white">100</div>
@@ -57,7 +57,7 @@ const MainPage = () => {
 
         <div
           className="backdrop-blur-xl rounded-3xl p-6 shadow-2xl border border-gray-800"
-          style={{ backgroundColor: 'rgba(23, 23, 23, 0.8)' }}
+          style={{ backgroundColor: 'rgba(23, 23, 23, 0.8)', borderColor: 'rgb(23, 23, 23)' }}
         >
           <h3 className="text-xl font-bold text-white mb-4">今日行程</h3>
           <div className="space-y-3">
@@ -82,7 +82,7 @@ const MainPage = () => {
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4">
         <div
           className="backdrop-blur-xl rounded-3xl p-2 shadow-2xl border border-gray-800"
-          style={{ backgroundColor: 'rgba(23, 23, 23, 0.95)' }}
+          style={{ backgroundColor: 'rgba(23, 23, 23, 0.95)', borderColor: 'rgb(23, 23, 23)' }}
         >
           <div className="flex justify-around">
             {menuItems.map((item) => (
@@ -92,6 +92,7 @@ const MainPage = () => {
                 className={`flex flex-col items-center py-3 px-4 rounded-2xl transition-all duration-300 ${
                   activeTab === item.id ? 'bg-white/15' : 'hover:bg-white/10'
                 }`}
+                style={{ border: 'none' }}
               >
                 <div className="w-8 h-8 mb-1 text-white flex items-center justify-center">
                   <span className="text-xl font-bold">◇</span>
