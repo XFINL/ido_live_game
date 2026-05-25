@@ -1,15 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 
 const MainPage = () => {
+  const navigate = useNavigate();
   const { stageName, gender } = useGameStore();
   const [activeTab, setActiveTab] = useState('home');
 
   const menuItems = [
-    { id: 'home', name: '主界面' },
-    { id: 'scene', name: '场景' },
-    { id: 'bag', name: '背包' },
-    { id: 'settings', name: '设置' }
+    { id: 'home', name: '主界面', path: null },
+    { id: 'scene', name: '场景', path: '/scene' },
+    { id: 'bag', name: '背包', path: '/bag' },
+    { id: 'settings', name: '设置', path: null }
   ];
 
   return (
@@ -88,7 +90,12 @@ const MainPage = () => {
             {menuItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  if (item.path) {
+                    navigate(item.path);
+                  }
+                }}
                 className={`flex flex-col items-center py-3 px-4 rounded-2xl transition-all duration-300 ${
                   activeTab === item.id ? 'bg-white/15' : 'hover:bg-white/10'
                 }`}
