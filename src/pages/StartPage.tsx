@@ -17,10 +17,14 @@ const StartPage = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 bg-black"
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgb(0, 0, 0)' }}
     >
       <div className="w-full max-w-md">
-        <div className="bg-gray-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-gray-700/50">
+        <div
+          className="backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-gray-800"
+          style={{ backgroundColor: 'rgba(23, 23, 23, 0.9)' }}
+        >
           <h1 className="text-4xl font-bold text-center mb-8 text-white drop-shadow-lg">
             星途
           </h1>
@@ -33,7 +37,7 @@ const StartPage = () => {
                 className={`py-4 px-6 rounded-2xl backdrop-blur-md border transition-all duration-300 ${
                   gender === 'male'
                     ? 'bg-white/20 border-white/50 shadow-lg'
-                    : 'bg-gray-800/50 border-gray-600 hover:bg-gray-700/50'
+                    : 'bg-gray-900/50 border-gray-700 hover:bg-gray-800/50'
                 }`}
               >
                 <div className="text-white font-semibold">男</div>
@@ -43,7 +47,7 @@ const StartPage = () => {
                 className={`py-4 px-6 rounded-2xl backdrop-blur-md border transition-all duration-300 ${
                   gender === 'female'
                     ? 'bg-white/20 border-white/50 shadow-lg'
-                    : 'bg-gray-800/50 border-gray-600 hover:bg-gray-700/50'
+                    : 'bg-gray-900/50 border-gray-700 hover:bg-gray-800/50'
                 }`}
               >
                 <div className="text-white font-semibold">女</div>
@@ -62,10 +66,10 @@ const StartPage = () => {
               placeholder="请输入你的艺名"
               className={`w-full py-4 px-6 rounded-2xl border transition-all duration-500 ${
                 inputFocused
-                  ? 'bg-gray-700/80 border-white/60 shadow-lg shadow-white/20'
+                  ? 'bg-gray-800 border-white/60 shadow-lg shadow-white/20'
                   : nameInput
-                  ? 'bg-gray-800/70 border-gray-500'
-                  : 'bg-gray-800/70 border-gray-600 animate-pulse'
+                  ? 'bg-gray-900 border-gray-600'
+                  : 'bg-gray-900 border-gray-700 animate-pulse'
               } text-white placeholder-gray-400 focus:outline-none`}
             />
           </div>
@@ -76,7 +80,7 @@ const StartPage = () => {
             className={`w-full py-4 rounded-2xl font-bold text-lg border transition-all duration-300 ${
               gender && nameInput.trim()
                 ? 'bg-white/15 border-white/40 text-white hover:bg-white/25 hover:shadow-lg'
-                : 'bg-gray-800/50 border-gray-600 text-gray-500 cursor-not-allowed'
+                : 'bg-gray-900/50 border-gray-700 text-gray-500 cursor-not-allowed'
             }`}
           >
             开始旅程

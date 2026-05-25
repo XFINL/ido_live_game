@@ -87,7 +87,8 @@ const StoryPage = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center p-8 bg-black"
+      className="min-h-screen flex flex-col items-center justify-center p-8"
+      style={{ backgroundColor: 'rgb(0, 0, 0)' }}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
@@ -104,10 +105,10 @@ const StoryPage = () => {
 
       <div className="fixed bottom-12 w-full max-w-md px-4">
         <div className="text-center">
-          <div className="text-gray-400 text-sm mb-3">
+          <div className="text-gray-500 text-sm mb-3">
             长按屏幕5秒可跳过剧情
           </div>
-          <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden">
+          <div className="w-full h-1 bg-gray-900 rounded-full overflow-hidden">
             <div
               className="h-full bg-white transition-all duration-100 rounded-full"
               style={{ width: `${Math.min((holdTime / 5) * 100, 100)}%` }}
