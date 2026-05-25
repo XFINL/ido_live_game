@@ -9,7 +9,7 @@ const MainPage = () => {
 
   const menuItems = [
     { id: 'home', name: '主界面', path: null },
-    { id: 'scene', name: '场景', path: '/scene' },
+    { id: 'scene', name: '场景', path: '/map' },
     { id: 'bag', name: '背包', path: '/bag' },
     { id: 'settings', name: '设置', path: null }
   ];
