@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 
 const ScenePage = () => {
   const navigate = useNavigate();
+  const [sceneLevel, setSceneLevel] = useState<'map' | 'home' | 'bedroom'>('map');
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -25,8 +26,6 @@ const ScenePage = () => {
       0.1,
       1000
     );
-    camera.position.set(0, 2, 8);
-    camera.lookAt(0, 1.5, 0);
     cameraRef.current = camera;
 
     // 创建渲染器
@@ -34,246 +33,661 @@ const ScenePage = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // 创建房间
-    const roomGroup = new THREE.Group();
+    const cleanupCurrentScene = () => {
+      while (scene.children.length > 0) {
+        const child = scene.children[0];
+        if ((child as any).isGroup) {
+          const group = child as THREE.Group;
+          while (group.children.length > 0) {
+            const obj = group.children[0];
+            if ('geometry' in obj) {
+              (obj as any).geometry.dispose();
+            }
+            if ('material' in obj) {
+              if (Array.isArray((obj as any).material)) {
+                (obj as any).material.forEach((mat: any) => mat.dispose());
+              } else {
+                (obj as any).material.dispose();
+              }
+            }
+            group.remove(obj);
+          }
+        }
+        scene.remove(child);
+      }
+    };
 
-    // 地板
-    const floorGeometry = new THREE.PlaneGeometry(12, 10);
-    const floorMaterial = new THREE.MeshStandardMaterial({
-      color: 0x1a1a1a,
-      roughness: 0.8,
-    });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = 0;
-    floor.receiveShadow = true;
-    roomGroup.add(floor);
+    const setupMapScene = () => {
+      cleanupCurrentScene();
+      camera.position.set(0, 50, 50);
+      camera.lookAt(0, 0, 0);
 
-    // 后墙
-    const backWallGeometry = new THREE.PlaneGeometry(12, 6);
-    const backWallMaterial = new THREE.MeshStandardMaterial({
-      color: 0x171717,
-      roughness: 0.9,
-    });
-    const backWall = new THREE.Mesh(backWallGeometry, backWallMaterial);
-    backWall.position.set(0, 3, -5);
-    backWall.receiveShadow = true;
-    roomGroup.add(backWall);
+      // 地面
+      const groundGeometry = new THREE.PlaneGeometry(200, 200);
+      const groundMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1a1a1a,
+        roughness: 0.9,
+      });
+      const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+      ground.rotation.x = -Math.PI / 2;
+      ground.receiveShadow = true;
+      scene.add(ground);
 
-    // 左墙
-    const leftWallGeometry = new THREE.PlaneGeometry(10, 6);
-    const leftWall = new THREE.Mesh(leftWallGeometry, backWallMaterial);
-    leftWall.position.set(-6, 3, 0);
-    leftWall.rotation.y = Math.PI / 2;
-    leftWall.receiveShadow = true;
-    roomGroup.add(leftWall);
+      // 道路
+      const roadGeometry = new THREE.PlaneGeometry(8, 200);
+      const roadMaterial = new THREE.MeshStandardMaterial({
+        color: 0x333333,
+        roughness: 0.8,
+      });
+      const road1 = new THREE.Mesh(roadGeometry, roadMaterial);
+      road1.rotation.x = -Math.PI / 2;
+      road1.position.z = -40;
+      road1.receiveShadow = true;
+      scene.add(road1);
 
-    // 右墙
-    const rightWall = new THREE.Mesh(leftWallGeometry, backWallMaterial);
-    rightWall.position.set(6, 3, 0);
-    rightWall.rotation.y = -Math.PI / 2;
-    rightWall.receiveShadow = true;
-    roomGroup.add(rightWall);
+      const road2 = new THREE.Mesh(roadGeometry, roadMaterial);
+      road2.rotation.x = -Math.PI / 2;
+      road2.rotation.z = Math.PI / 2;
+      road2.position.x = -40;
+      road2.receiveShadow = true;
+      scene.add(road2);
 
-    // 床
-    const bedGroup = new THREE.Group();
+      // 家的建筑
+      const houseGroup = new THREE.Group();
+      
+      const houseBaseGeometry = new THREE.BoxGeometry(30, 15, 25);
+      const houseMaterial = new THREE.MeshStandardMaterial({
+        color: 0x2a2a2a,
+        roughness: 0.7,
+      });
+      const houseBase = new THREE.Mesh(houseBaseGeometry, houseMaterial);
+      houseBase.position.set(0, 7.5, 0);
+      houseBase.castShadow = true;
+      houseBase.receiveShadow = true;
+      houseGroup.add(houseBase);
 
-    // 床架
-    const bedBaseGeometry = new THREE.BoxGeometry(2.5, 0.3, 3.5);
-    const bedMaterial = new THREE.MeshStandardMaterial({
-      color: 0x333333,
-      roughness: 0.7,
-    });
-    const bedBase = new THREE.Mesh(bedBaseGeometry, bedMaterial);
-    bedBase.position.set(0, 0.15, -3);
-    bedBase.castShadow = true;
-    bedBase.receiveShadow = true;
-    bedGroup.add(bedBase);
+      // 屋顶
+      const roofGeometry = new THREE.ConeGeometry(22, 10, 4);
+      const roofMaterial = new THREE.MeshStandardMaterial({
+        color: 0x444444,
+        roughness: 0.8,
+      });
+      const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+      roof.position.set(0, 20, 0);
+      roof.rotation.y = Math.PI / 4;
+      roof.castShadow = true;
+      houseGroup.add(roof);
 
-    // 床垫
-    const mattressGeometry = new THREE.BoxGeometry(2.4, 0.2, 3.4);
-    const mattressMaterial = new THREE.MeshStandardMaterial({
-      color: 0x444444,
-      roughness: 0.5,
-    });
-    const mattress = new THREE.Mesh(mattressGeometry, mattressMaterial);
-    mattress.position.set(0, 0.4, -3);
-    mattress.castShadow = true;
-    mattress.receiveShadow = true;
-    bedGroup.add(mattress);
+      // 门
+      const doorGeometry = new THREE.BoxGeometry(5, 8, 1);
+      const doorMaterial = new THREE.MeshStandardMaterial({
+        color: 0x664422,
+        roughness: 0.6,
+        emissive: 0xffaa44,
+        emissiveIntensity: 0.2,
+      });
+      const door = new THREE.Mesh(doorGeometry, doorMaterial);
+      door.position.set(0, 4, 12.6);
+      houseGroup.add(door);
 
-    // 枕头
-    const pillowGeometry = new THREE.BoxGeometry(1.2, 0.15, 0.6);
-    const pillowMaterial = new THREE.MeshStandardMaterial({
-      color: 0x555555,
-      roughness: 0.6,
-    });
-    const pillow = new THREE.Mesh(pillowGeometry, pillowMaterial);
-    pillow.position.set(0, 0.58, -4.2);
-    pillow.castShadow = true;
-    pillow.receiveShadow = true;
-    bedGroup.add(pillow);
+      // 窗户
+      const windowGeometry = new THREE.BoxGeometry(4, 3, 0.5);
+      const windowMaterial = new THREE.MeshStandardMaterial({
+        color: 0x4466aa,
+        emissive: 0x6699cc,
+        emissiveIntensity: 0.3,
+        transparent: true,
+        opacity: 0.7,
+      });
+      const window1 = new THREE.Mesh(windowGeometry, windowMaterial);
+      window1.position.set(-8, 10, 12.5);
+      houseGroup.add(window1);
+      const window2 = new THREE.Mesh(windowGeometry, windowMaterial);
+      window2.position.set(8, 10, 12.5);
+      houseGroup.add(window2);
 
-    roomGroup.add(bedGroup);
+      // 门牌号
+      const signGeometry = new THREE.BoxGeometry(3, 1.5, 0.2);
+      const signMaterial = new THREE.MeshStandardMaterial({
+        color: 0x886633,
+        emissive: 0xffcc88,
+        emissiveIntensity: 0.1,
+      });
+      const sign = new THREE.Mesh(signGeometry, signMaterial);
+      sign.position.set(0, 13, 12.8);
+      houseGroup.add(sign);
 
-    // 书桌
-    const deskGroup = new THREE.Group();
+      scene.add(houseGroup);
 
-    // 桌面
-    const deskTopGeometry = new THREE.BoxGeometry(3, 0.1, 1.5);
-    const deskMaterial = new THREE.MeshStandardMaterial({
-      color: 0x3a3a3a,
-      roughness: 0.6,
-    });
-    const deskTop = new THREE.Mesh(deskTopGeometry, deskMaterial);
-    deskTop.position.set(-4, 1, -3.5);
-    deskTop.castShadow = true;
-    deskTop.receiveShadow = true;
-    deskGroup.add(deskTop);
+      // 一些树作为装饰
+      for (let i = 0; i < 8; i++) {
+        const treeGroup = new THREE.Group();
+        const trunkGeometry = new THREE.CylinderGeometry(0.8, 1.2, 5, 8);
+        const trunkMaterial = new THREE.MeshStandardMaterial({
+          color: 0x3a2211,
+          roughness: 0.9,
+        });
+        const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+        trunk.position.y = 2.5;
+        trunk.castShadow = true;
+        treeGroup.add(trunk);
 
-    // 桌腿
-    const legGeometry = new THREE.BoxGeometry(0.1, 1, 0.1);
-    const legMaterial = new THREE.MeshStandardMaterial({
-      color: 0x444444,
-    });
-    const positions = [
-      [-5.3, 0.5, -4.1],
-      [-2.7, 0.5, -4.1],
-      [-5.3, 0.5, -2.9],
-      [-2.7, 0.5, -2.9],
-    ];
-    positions.forEach(pos => {
-      const leg = new THREE.Mesh(legGeometry, legMaterial);
-      leg.position.set(pos[0], pos[1], pos[2]);
-      leg.castShadow = true;
-      deskGroup.add(leg);
-    });
+        const leavesGeometry = new THREE.SphereGeometry(4, 8, 8);
+        const leavesMaterial = new THREE.MeshStandardMaterial({
+          color: 0x1a441a,
+          roughness: 0.8,
+        });
+        const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
+        leaves.position.y = 7;
+        leaves.castShadow = true;
+        treeGroup.add(leaves);
 
-    roomGroup.add(deskGroup);
+        const angle = (i / 8) * Math.PI * 2;
+        const radius = 50 + Math.random() * 20;
+        treeGroup.position.set(
+          Math.cos(angle) * radius,
+          0,
+          Math.sin(angle) * radius
+        );
+        scene.add(treeGroup);
+      }
 
-    // 电脑显示器
-    const monitorGroup = new THREE.Group();
-    const screenGeometry = new THREE.BoxGeometry(1.2, 0.7, 0.05);
-    const screenMaterial = new THREE.MeshStandardMaterial({
-      color: 0x111111,
-      emissive: 0x222244,
-      emissiveIntensity: 0.3,
-    });
-    const screen = new THREE.Mesh(screenGeometry, screenMaterial);
-    screen.position.set(-4, 1.55, -3.8);
-    monitorGroup.add(screen);
+      // 环境光
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+      scene.add(ambientLight);
 
-    // 显示器底座
-    const standGeometry = new THREE.BoxGeometry(0.3, 0.2, 0.2);
-    const standMaterial = new THREE.MeshStandardMaterial({ color: 0x444444 });
-    const stand = new THREE.Mesh(standGeometry, standMaterial);
-    stand.position.set(-4, 1.1, -3.8);
-    monitorGroup.add(stand);
+      // 主光源
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(50, 80, 50);
+      directionalLight.castShadow = true;
+      directionalLight.shadow.mapSize.width = 2048;
+      directionalLight.shadow.mapSize.height = 2048;
+      directionalLight.shadow.camera.near = 0.5;
+      directionalLight.shadow.camera.far = 200;
+      directionalLight.shadow.camera.left = -100;
+      directionalLight.shadow.camera.right = 100;
+      directionalLight.shadow.camera.top = 100;
+      directionalLight.shadow.camera.bottom = -100;
+      scene.add(directionalLight);
+    };
 
-    roomGroup.add(monitorGroup);
+    const setupHomeScene = () => {
+      cleanupCurrentScene();
+      camera.position.set(0, 5, 15);
+      camera.lookAt(0, 3, 0);
 
-    // 椅子
-    const chairGroup = new THREE.Group();
+      // 地板
+      const floorGeometry = new THREE.PlaneGeometry(40, 40);
+      const floorMaterial = new THREE.MeshStandardMaterial({
+        color: 0x222222,
+        roughness: 0.8,
+      });
+      const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+      floor.rotation.x = -Math.PI / 2;
+      floor.receiveShadow = true;
+      scene.add(floor);
 
-    // 座椅
-    const seatGeometry = new THREE.BoxGeometry(0.6, 0.1, 0.6);
-    const chairMaterial = new THREE.MeshStandardMaterial({
-      color: 0x2a2a2a,
-      roughness: 0.7,
-    });
-    const seat = new THREE.Mesh(seatGeometry, chairMaterial);
-    seat.position.set(-4, 0.5, -2);
-    seat.castShadow = true;
-    chairGroup.add(seat);
+      // 墙壁
+      const wallGeometry = new THREE.BoxGeometry(40, 15, 1);
+      const wallMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1a1a1a,
+        roughness: 0.9,
+      });
+      
+      const backWall = new THREE.Mesh(wallGeometry, wallMaterial);
+      backWall.position.set(0, 7.5, -20);
+      backWall.receiveShadow = true;
+      scene.add(backWall);
 
-    // 椅背
-    const backGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.08);
-    const back = new THREE.Mesh(backGeometry, chairMaterial);
-    back.position.set(-4, 0.95, -1.65);
-    back.castShadow = true;
-    chairGroup.add(back);
+      const leftWall = new THREE.Mesh(wallGeometry, wallMaterial);
+      leftWall.position.set(-20, 7.5, 0);
+      leftWall.rotation.y = Math.PI / 2;
+      leftWall.receiveShadow = true;
+      scene.add(leftWall);
 
-    roomGroup.add(chairGroup);
+      const rightWall = new THREE.Mesh(wallGeometry, wallMaterial);
+      rightWall.position.set(20, 7.5, 0);
+      rightWall.rotation.y = -Math.PI / 2;
+      rightWall.receiveShadow = true;
+      scene.add(rightWall);
 
-    // 衣柜
-    const wardrobeGroup = new THREE.Group();
-    const wardrobeGeometry = new THREE.BoxGeometry(2, 3, 0.5);
-    const wardrobeMaterial = new THREE.MeshStandardMaterial({
-      color: 0x2a2a2a,
-      roughness: 0.6,
-    });
-    const wardrobe = new THREE.Mesh(wardrobeGeometry, wardrobeMaterial);
-    wardrobe.position.set(4, 1.5, -4.5);
-    wardrobe.castShadow = true;
-    wardrobe.receiveShadow = true;
-    wardrobeGroup.add(wardrobe);
+      // 楼梯
+      const stairGroup = new THREE.Group();
+      for (let i = 0; i < 10; i++) {
+        const stepGeometry = new THREE.BoxGeometry(8, 0.5, 3);
+        const stepMaterial = new THREE.MeshStandardMaterial({
+          color: 0x333333,
+          roughness: 0.7,
+        });
+        const step = new THREE.Mesh(stepGeometry, stepMaterial);
+        step.position.set(12, 0.25 + i * 0.5, -10 - i * 2);
+        step.castShadow = true;
+        step.receiveShadow = true;
+        stairGroup.add(step);
+      }
+      scene.add(stairGroup);
 
-    // 衣柜把手
-    const handleGeometry = new THREE.BoxGeometry(0.05, 0.15, 0.02);
-    const handleMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
-    const handle1 = new THREE.Mesh(handleGeometry, handleMaterial);
-    handle1.position.set(3.55, 1.5, -4.23);
-    wardrobeGroup.add(handle1);
-    const handle2 = new THREE.Mesh(handleGeometry, handleMaterial);
-    handle2.position.set(4.45, 1.5, -4.23);
-    wardrobeGroup.add(handle2);
+      // 卧室门
+      const bedroomDoorGroup = new THREE.Group();
+      const bedroomDoorGeometry = new THREE.BoxGeometry(4, 6, 0.3);
+      const bedroomDoorMaterial = new THREE.MeshStandardMaterial({
+        color: 0x553311,
+        roughness: 0.6,
+        emissive: 0xffcc99,
+        emissiveIntensity: 0.15,
+      });
+      const bedroomDoor = new THREE.Mesh(bedroomDoorGeometry, bedroomDoorMaterial);
+      bedroomDoor.position.set(-10, 3, -19.7);
+      bedroomDoorGroup.add(bedroomDoor);
 
-    roomGroup.add(wardrobeGroup);
+      // 门框发光
+      const doorFrameGeometry = new THREE.BoxGeometry(4.4, 6.4, 0.1);
+      const doorFrameMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffaa66,
+        emissive: 0xffcc99,
+        emissiveIntensity: 0.25,
+        transparent: true,
+        opacity: 0.5,
+      });
+      const doorFrame = new THREE.Mesh(doorFrameGeometry, doorFrameMaterial);
+      doorFrame.position.set(-10, 3, -19.5);
+      bedroomDoorGroup.add(doorFrame);
 
-    // 台灯
-    const lampGroup = new THREE.Group();
+      scene.add(bedroomDoorGroup);
 
-    // 灯座
-    const baseGeometry = new THREE.CylinderGeometry(0.15, 0.2, 0.08, 16);
-    const lampMaterial = new THREE.MeshStandardMaterial({ color: 0x444444 });
-    const base = new THREE.Mesh(baseGeometry, lampMaterial);
-    base.position.set(-4, 1.08, -3.3);
-    lampGroup.add(base);
+      // 客厅沙发
+      const sofaGroup = new THREE.Group();
+      const sofaBaseGeometry = new THREE.BoxGeometry(10, 2, 5);
+      const sofaMaterial = new THREE.MeshStandardMaterial({
+        color: 0x3a3a4a,
+        roughness: 0.7,
+      });
+      const sofaBase = new THREE.Mesh(sofaBaseGeometry, sofaMaterial);
+      sofaBase.position.set(0, 1, 0);
+      sofaBase.castShadow = true;
+      sofaBase.receiveShadow = true;
+      sofaGroup.add(sofaBase);
 
-    // 灯杆
-    const poleGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8);
-    const pole = new THREE.Mesh(poleGeometry, lampMaterial);
-    pole.position.set(-4, 1.38, -3.3);
-    lampGroup.add(pole);
+      const sofaBackGeometry = new THREE.BoxGeometry(10, 4, 1.5);
+      const sofaBack = new THREE.Mesh(sofaBackGeometry, sofaMaterial);
+      sofaBack.position.set(0, 3, -1.5);
+      sofaBack.castShadow = true;
+      sofaGroup.add(sofaBack);
+      scene.add(sofaGroup);
 
-    // 灯罩
-    const shadeGeometry = new THREE.ConeGeometry(0.25, 0.25, 16, 1, true);
-    const shadeMaterial = new THREE.MeshStandardMaterial({
-      color: 0x333333,
-      side: THREE.DoubleSide,
-    });
-    const shade = new THREE.Mesh(shadeGeometry, shadeMaterial);
-    shade.position.set(-4, 1.73, -3.3);
-    shade.rotation.x = Math.PI;
-    lampGroup.add(shade);
+      // 茶几
+      const tableGeometry = new THREE.BoxGeometry(4, 1, 2);
+      const tableMaterial = new THREE.MeshStandardMaterial({
+        color: 0x332211,
+        roughness: 0.6,
+      });
+      const table = new THREE.Mesh(tableGeometry, tableMaterial);
+      table.position.set(0, 0.5, 4);
+      table.castShadow = true;
+      table.receiveShadow = true;
+      scene.add(table);
 
-    roomGroup.add(lampGroup);
+      // 吊灯
+      const chandelierGroup = new THREE.Group();
+      const chandelierBaseGeometry = new THREE.CylinderGeometry(1.5, 1, 0.5, 16);
+      const chandelierBaseMaterial = new THREE.MeshStandardMaterial({
+        color: 0x444444,
+        roughness: 0.8,
+      });
+      const chandelierBase = new THREE.Mesh(chandelierBaseGeometry, chandelierBaseMaterial);
+      chandelierBase.position.y = 14.5;
+      chandelierGroup.add(chandelierBase);
 
-    scene.add(roomGroup);
+      const chandelierRodGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 8);
+      const chandelierRodMaterial = new THREE.MeshStandardMaterial({
+        color: 0x666666,
+      });
+      const chandelierRod = new THREE.Mesh(chandelierRodGeometry, chandelierRodMaterial);
+      chandelierRod.position.y = 14;
+      chandelierGroup.add(chandelierRod);
 
-    // 主光源
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-    scene.add(ambientLight);
+      scene.add(chandelierGroup);
 
-    // 顶灯
-    const ceilingLight = new THREE.PointLight(0xffffff, 1, 20);
-    ceilingLight.position.set(0, 5.5, 0);
-    ceilingLight.castShadow = true;
-    scene.add(ceilingLight);
+      // 环境光
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
 
-    // 台灯光源
-    const deskLamp = new THREE.PointLight(0xffffaa, 0.5, 5);
-    deskLamp.position.set(-4, 1.65, -3.3);
-    scene.add(deskLamp);
+      // 吊灯光源
+      const ceilingLight = new THREE.PointLight(0xffffff, 1.2, 60);
+      ceilingLight.position.set(0, 13, 0);
+      ceilingLight.castShadow = true;
+      ceilingLight.shadow.mapSize.width = 1024;
+      ceilingLight.shadow.mapSize.height = 1024;
+      scene.add(ceilingLight);
 
-    // 鼠标控制变量
+      // 卧室方向的补光
+      const bedroomLight = new THREE.PointLight(0xffcc99, 0.6, 30);
+      bedroomLight.position.set(-10, 5, -18);
+      scene.add(bedroomLight);
+    };
+
+    const setupBedroomScene = () => {
+      cleanupCurrentScene();
+      camera.position.set(0, 3, 10);
+      camera.lookAt(0, 2, 0);
+
+      const roomGroup = new THREE.Group();
+
+      // 地板
+      const floorGeometry = new THREE.PlaneGeometry(25, 20);
+      const floorMaterial = new THREE.MeshStandardMaterial({
+        color: 0x2a2222,
+        roughness: 0.8,
+      });
+      const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+      floor.rotation.x = -Math.PI / 2;
+      floor.receiveShadow = true;
+      roomGroup.add(floor);
+
+      // 墙壁
+      const wallGeometry = new THREE.BoxGeometry(25, 12, 1);
+      const wallMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1a1818,
+        roughness: 0.9,
+      });
+      
+      const backWall = new THREE.Mesh(wallGeometry, wallMaterial);
+      backWall.position.set(0, 6, -10);
+      backWall.receiveShadow = true;
+      roomGroup.add(backWall);
+
+      const leftWall = new THREE.Mesh(wallGeometry, wallMaterial);
+      leftWall.position.set(-12.5, 6, 0);
+      leftWall.rotation.y = Math.PI / 2;
+      leftWall.receiveShadow = true;
+      roomGroup.add(leftWall);
+
+      const rightWall = new THREE.Mesh(wallGeometry, wallMaterial);
+      rightWall.position.set(12.5, 6, 0);
+      rightWall.rotation.y = -Math.PI / 2;
+      rightWall.receiveShadow = true;
+      roomGroup.add(rightWall);
+
+      // 床
+      const bedGroup = new THREE.Group();
+      const bedBaseGeometry = new THREE.BoxGeometry(8, 0.8, 6);
+      const bedMaterial = new THREE.MeshStandardMaterial({
+        color: 0x3a3a3a,
+        roughness: 0.7,
+      });
+      const bedBase = new THREE.Mesh(bedBaseGeometry, bedMaterial);
+      bedBase.position.set(0, 0.4, -5);
+      bedBase.castShadow = true;
+      bedBase.receiveShadow = true;
+      bedGroup.add(bedBase);
+
+      const mattressGeometry = new THREE.BoxGeometry(7.8, 0.6, 5.8);
+      const mattressMaterial = new THREE.MeshStandardMaterial({
+        color: 0x555566,
+        roughness: 0.6,
+      });
+      const mattress = new THREE.Mesh(mattressGeometry, mattressMaterial);
+      mattress.position.set(0, 1.1, -5);
+      mattress.castShadow = true;
+      mattress.receiveShadow = true;
+      bedGroup.add(mattress);
+
+      const pillowGeometry = new THREE.BoxGeometry(3.5, 0.3, 1.8);
+      const pillowMaterial = new THREE.MeshStandardMaterial({
+        color: 0x666677,
+        roughness: 0.7,
+      });
+      const pillow1 = new THREE.Mesh(pillowGeometry, pillowMaterial);
+      pillow1.position.set(-1.8, 1.55, -7.3);
+      pillow1.castShadow = true;
+      bedGroup.add(pillow1);
+      const pillow2 = new THREE.Mesh(pillowGeometry, pillowMaterial);
+      pillow2.position.set(1.8, 1.55, -7.3);
+      pillow2.castShadow = true;
+      bedGroup.add(pillow2);
+
+      const quiltGeometry = new THREE.BoxGeometry(7, 0.4, 4);
+      const quiltMaterial = new THREE.MeshStandardMaterial({
+        color: 0xaa6688,
+        roughness: 0.5,
+        emissive: 0x442233,
+        emissiveIntensity: 0.05,
+      });
+      const quilt = new THREE.Mesh(quiltGeometry, quiltMaterial);
+      quilt.position.set(0, 1.45, -4);
+      quilt.castShadow = true;
+      bedGroup.add(quilt);
+
+      roomGroup.add(bedGroup);
+
+      // 床头柜
+      const nightstandGeometry = new THREE.BoxGeometry(2, 2, 2);
+      const nightstandMaterial = new THREE.MeshStandardMaterial({
+        color: 0x3a2a1a,
+        roughness: 0.6,
+      });
+      const nightstand1 = new THREE.Mesh(nightstandGeometry, nightstandMaterial);
+      nightstand1.position.set(-5, 1, -5);
+      nightstand1.castShadow = true;
+      nightstand1.receiveShadow = true;
+      roomGroup.add(nightstand1);
+
+      const nightstand2 = new THREE.Mesh(nightstandGeometry, nightstandMaterial);
+      nightstand2.position.set(5, 1, -5);
+      nightstand2.castShadow = true;
+      nightstand2.receiveShadow = true;
+      roomGroup.add(nightstand2);
+
+      // 台灯
+      const createLamp = (x: number, z: number) => {
+        const lampGroup = new THREE.Group();
+        const lampBaseGeometry = new THREE.CylinderGeometry(0.4, 0.5, 0.2, 12);
+        const lampBaseMaterial = new THREE.MeshStandardMaterial({
+          color: 0x555555,
+          roughness: 0.8,
+        });
+        const lampBase = new THREE.Mesh(lampBaseGeometry, lampBaseMaterial);
+        lampBase.position.y = 2.1;
+        lampGroup.add(lampBase);
+
+        const lampRodGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.8, 8);
+        const lampRodMaterial = new THREE.MeshStandardMaterial({
+          color: 0x777777,
+        });
+        const lampRod = new THREE.Mesh(lampRodGeometry, lampRodMaterial);
+        lampRod.position.y = 2.6;
+        lampGroup.add(lampRod);
+
+        const lampShadeGeometry = new THREE.ConeGeometry(0.5, 0.5, 12, 1, true);
+        const lampShadeMaterial = new THREE.MeshStandardMaterial({
+          color: 0xddddaa,
+          emissive: 0xffeecc,
+          emissiveIntensity: 0.3,
+          side: THREE.DoubleSide,
+          roughness: 0.4,
+        });
+        const lampShade = new THREE.Mesh(lampShadeGeometry, lampShadeMaterial);
+        lampShade.position.y = 3;
+        lampShade.rotation.x = Math.PI;
+        lampGroup.add(lampShade);
+
+        lampGroup.position.set(x, 0, z);
+        return lampGroup;
+      };
+
+      roomGroup.add(createLamp(-5, -5));
+      roomGroup.add(createLamp(5, -5));
+
+      // 衣柜
+      const wardrobeGeometry = new THREE.BoxGeometry(5, 7, 1.5);
+      const wardrobeMaterial = new THREE.MeshStandardMaterial({
+        color: 0x2a2a2a,
+        roughness: 0.7,
+      });
+      const wardrobe = new THREE.Mesh(wardrobeGeometry, wardrobeMaterial);
+      wardrobe.position.set(-10, 3.5, -5);
+      wardrobe.castShadow = true;
+      wardrobe.receiveShadow = true;
+      roomGroup.add(wardrobe);
+
+      // 窗户
+      const windowGeometry = new THREE.BoxGeometry(6, 4, 0.3);
+      const windowMaterial = new THREE.MeshStandardMaterial({
+        color: 0x446688,
+        emissive: 0x66aacc,
+        emissiveIntensity: 0.2,
+        transparent: true,
+        opacity: 0.6,
+        roughness: 0.3,
+      });
+      const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
+      windowMesh.position.set(0, 6, -9.85);
+      roomGroup.add(windowMesh);
+
+      // 窗帘
+      const curtainGeometry = new THREE.PlaneGeometry(8, 5);
+      const curtainMaterial = new THREE.MeshStandardMaterial({
+        color: 0x664455,
+        roughness: 0.9,
+        side: THREE.DoubleSide,
+      });
+      const curtain1 = new THREE.Mesh(curtainGeometry, curtainMaterial);
+      curtain1.position.set(-3.5, 6, -9.5);
+      roomGroup.add(curtain1);
+      const curtain2 = new THREE.Mesh(curtainGeometry, curtainMaterial);
+      curtain2.position.set(3.5, 6, -9.5);
+      roomGroup.add(curtain2);
+
+      // 书桌
+      const deskGroup = new THREE.Group();
+      const deskTopGeometry = new THREE.BoxGeometry(5, 0.15, 2.5);
+      const deskMaterial = new THREE.MeshStandardMaterial({
+        color: 0x3a2a1a,
+        roughness: 0.6,
+      });
+      const deskTop = new THREE.Mesh(deskTopGeometry, deskMaterial);
+      deskTop.position.set(10, 1.5, -5);
+      deskTop.castShadow = true;
+      deskTop.receiveShadow = true;
+      deskGroup.add(deskTop);
+
+      const deskLegGeometry = new THREE.BoxGeometry(0.2, 1.5, 0.2);
+      const deskLegMaterial = new THREE.MeshStandardMaterial({
+        color: 0x2a1a0a,
+      });
+      const deskLegPositions = [
+        [8, 0.75, -6], [12, 0.75, -6], [8, 0.75, -4], [12, 0.75, -4]
+      ];
+      deskLegPositions.forEach(pos => {
+        const leg = new THREE.Mesh(deskLegGeometry, deskLegMaterial);
+        leg.position.set(pos[0], pos[1], pos[2]);
+        leg.castShadow = true;
+        deskGroup.add(leg);
+      });
+
+      roomGroup.add(deskGroup);
+
+      // 椅子
+      const chairGroup = new THREE.Group();
+      const chairSeatGeometry = new THREE.BoxGeometry(1.5, 0.2, 1.5);
+      const chairMaterial = new THREE.MeshStandardMaterial({
+        color: 0x333344,
+        roughness: 0.7,
+      });
+      const chairSeat = new THREE.Mesh(chairSeatGeometry, chairMaterial);
+      chairSeat.position.set(10, 0.7, -2);
+      chairSeat.castShadow = true;
+      chairGroup.add(chairSeat);
+
+      const chairBackGeometry = new THREE.BoxGeometry(1.5, 1.5, 0.15);
+      const chairBack = new THREE.Mesh(chairBackGeometry, chairMaterial);
+      chairBack.position.set(10, 1.45, -1.2);
+      chairBack.castShadow = true;
+      chairGroup.add(chairBack);
+
+      roomGroup.add(chairGroup);
+
+      // 电脑
+      const monitorGroup = new THREE.Group();
+      const screenGeometry = new THREE.BoxGeometry(2, 1.2, 0.08);
+      const screenMaterial = new THREE.MeshStandardMaterial({
+        color: 0x111111,
+        emissive: 0x4488aa,
+        emissiveIntensity: 0.4,
+      });
+      const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+      screen.position.set(10, 2.35, -5);
+      monitorGroup.add(screen);
+
+      const monitorStandGeometry = new THREE.BoxGeometry(0.5, 0.35, 0.4);
+      const monitorStandMaterial = new THREE.MeshStandardMaterial({
+        color: 0x444444,
+      });
+      const monitorStand = new THREE.Mesh(monitorStandGeometry, monitorStandMaterial);
+      monitorStand.position.set(10, 1.75, -5);
+      monitorGroup.add(monitorStand);
+
+      roomGroup.add(monitorGroup);
+
+      scene.add(roomGroup);
+
+      // 环境光
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+      scene.add(ambientLight);
+
+      // 主吊灯
+      const ceilingLight = new THREE.PointLight(0xffffff, 0.8, 30);
+      ceilingLight.position.set(0, 10, 0);
+      ceilingLight.castShadow = true;
+      ceilingLight.shadow.mapSize.width = 1024;
+      ceilingLight.shadow.mapSize.height = 1024;
+      scene.add(ceilingLight);
+
+      // 台灯光源
+      const lampLight1 = new THREE.PointLight(0xffeedd, 0.7, 10);
+      lampLight1.position.set(-5, 3, -5);
+      scene.add(lampLight1);
+
+      const lampLight2 = new THREE.PointLight(0xffeedd, 0.7, 10);
+      lampLight2.position.set(5, 3, -5);
+      scene.add(lampLight2);
+
+      // 窗户月光
+      const windowLight = new THREE.PointLight(0xaaccff, 0.4, 20);
+      windowLight.position.set(0, 5, -9);
+      scene.add(windowLight);
+
+      // 电脑屏幕光
+      const monitorLight = new THREE.PointLight(0x88bbdd, 0.3, 5);
+      monitorLight.position.set(10, 2.3, -4.5);
+      scene.add(monitorLight);
+    };
+
+    const loadScene = () => {
+      switch (sceneLevel) {
+        case 'map':
+          setupMapScene();
+          break;
+        case 'home':
+          setupHomeScene();
+          break;
+        case 'bedroom':
+          setupBedroomScene();
+          break;
+      }
+    };
+
+    loadScene();
+
+    // 鼠标控制
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
     let rotationY = 0;
-    let rotationX = 0.3;
+    let rotationX = 0.2;
 
     const handleMouseDown = (e: MouseEvent) => {
       isDragging = true;
@@ -287,7 +701,7 @@ const ScenePage = () => {
       const deltaY = e.clientY - previousMousePosition.y;
 
       rotationY += deltaX * 0.01;
-      rotationX = Math.max(-0.5, Math.min(0.8, rotationX + deltaY * 0.01));
+      rotationX = Math.max(-0.5, Math.min(0.6, rotationX + deltaY * 0.01));
 
       previousMousePosition = { x: e.clientX, y: e.clientY };
     };
@@ -311,7 +725,7 @@ const ScenePage = () => {
       const deltaY = e.touches[0].clientY - touchStartY;
 
       rotationY += deltaX * 0.01;
-      rotationX = Math.max(-0.5, Math.min(0.8, rotationX + deltaY * 0.01));
+      rotationX = Math.max(-0.5, Math.min(0.6, rotationX + deltaY * 0.01));
 
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
@@ -327,12 +741,35 @@ const ScenePage = () => {
     const animate = () => {
       animationIdRef.current = requestAnimationFrame(animate);
 
-      // 更新相机位置
-      const radius = 8;
+      let radius = 10;
+      let yOffset = 0;
+      
+      switch (sceneLevel) {
+        case 'map':
+          radius = 80;
+          yOffset = 40;
+          break;
+        case 'home':
+          radius = 25;
+          yOffset = 8;
+          break;
+        case 'bedroom':
+          radius = 12;
+          yOffset = 4;
+          break;
+      }
+
       camera.position.x = Math.sin(rotationY) * radius * Math.cos(rotationX);
-      camera.position.y = 2 + Math.sin(rotationX) * 3;
+      camera.position.y = yOffset + Math.sin(rotationX) * radius * 0.5;
       camera.position.z = Math.cos(rotationY) * radius * Math.cos(rotationX);
-      camera.lookAt(0, 1.5, 0);
+      
+      let lookAtY = 3;
+      switch (sceneLevel) {
+        case 'map': lookAtY = 10; break;
+        case 'home': lookAtY = 4; break;
+        case 'bedroom': lookAtY = 2.5; break;
+      }
+      camera.lookAt(0, lookAtY, 0);
 
       renderer.render(scene, camera);
     };
@@ -366,7 +803,51 @@ const ScenePage = () => {
         rendererRef.current.dispose();
       }
     };
-  }, []);
+  }, [sceneLevel]);
+
+  const getSceneTitle = () => {
+    switch (sceneLevel) {
+      case 'map': return '城市地图';
+      case 'home': return '家';
+      case 'bedroom': return '卧室';
+      default: return '';
+    }
+  };
+
+  const getBackAction = () => {
+    switch (sceneLevel) {
+      case 'map':
+        return () => navigate('/main');
+      case 'home':
+        return () => setSceneLevel('map');
+      case 'bedroom':
+        return () => setSceneLevel('home');
+      default:
+        return () => navigate('/main');
+    }
+  };
+
+  const getForwardAction = () => {
+    switch (sceneLevel) {
+      case 'map':
+        return () => setSceneLevel('home');
+      case 'home':
+        return () => setSceneLevel('bedroom');
+      default:
+        return null;
+    }
+  };
+
+  const getForwardLabel = () => {
+    switch (sceneLevel) {
+      case 'map':
+        return '进入家';
+      case 'home':
+        return '进入卧室';
+      default:
+        return '';
+    }
+  };
 
   return (
     <div className="relative w-full h-screen" style={{ backgroundColor: 'rgb(0, 0, 0)' }}>
@@ -375,9 +856,9 @@ const ScenePage = () => {
 
       {/* 顶部导航覆盖层 */}
       <div className="absolute top-0 left-0 right-0 p-6 md:p-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
           <button
-            onClick={() => navigate('/main')}
+            onClick={getBackAction()}
             className="flex items-center gap-2 text-white hover:text-gray-400 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -385,21 +866,32 @@ const ScenePage = () => {
             </svg>
             <span className="text-lg tracking-wide">返回</span>
           </button>
+          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+            {getSceneTitle()}
+          </h1>
+          <div className="w-24" />
         </div>
       </div>
 
-      {/* 底部信息覆盖层 */}
+      {/* 底部操作按钮 */}
       <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-end">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight mb-2">房间</h1>
               <p className="text-gray-500 text-sm">拖动旋转视角</p>
             </div>
-            <div className="text-right">
-              <div className="text-gray-500 text-xs uppercase tracking-widest mb-1">场景</div>
-              <div className="text-gray-400 text-sm">你的私人空间</div>
-            </div>
+            {getForwardAction() && (
+              <button
+                onClick={getForwardAction()}
+                className="px-8 py-4 rounded-2xl border text-white font-semibold transition-all duration-300 hover:bg-white/15 hover:shadow-lg"
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  borderColor: 'rgb(23, 23, 23)'
+                }}
+              >
+                {getForwardLabel()}
+              </button>
+            )}
           </div>
         </div>
       </div>
