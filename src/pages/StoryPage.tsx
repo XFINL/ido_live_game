@@ -8,13 +8,19 @@ const StoryPage = () => {
   const storyTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const storyContent = [
-    '在一个遥远的小镇，',
-    '有一个关于铃铛的传说，',
-    '每当夜幕降临，',
-    '清脆的铃声便会响起，',
-    '引领着迷失的灵魂找到回家的路...',
-    '而你，',
-    '将成为这个故事的主角。'
+    '大学毕业了...',
+    '你拖着沉重的行李箱，',
+    '站在了这座陌生城市的土地上。',
+    '霓虹灯闪烁，车水马龙，',
+    '这座城市承载着无数人的梦想。',
+    '你找到了一间小小的出租屋，',
+    '放下行李，坐在床边。',
+    '窗外是城市的夜景，',
+    '你回想起了自己的梦想...',
+    '成为一名闪耀的偶像！',
+    '这条路注定不会平坦，',
+    '但你已经准备好了。',
+    '你的星途，从此刻开始...'
   ];
 
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
@@ -28,20 +34,20 @@ const StoryPage = () => {
         const timer = setTimeout(() => {
           setDisplayText((prev) => prev + currentSentence[charIndex]);
           setCharIndex((prev) => prev + 1);
-        }, 100);
+        }, 80);
         return () => clearTimeout(timer);
       } else {
         const timer = setTimeout(() => {
           setCurrentTextIndex((prev) => prev + 1);
           setDisplayText('');
           setCharIndex(0);
-        }, 1500);
+        }, 1800);
         return () => clearTimeout(timer);
       }
     } else {
       storyTimerRef.current = setTimeout(() => {
         navigate('/main');
-      }, 2000);
+      }, 2500);
     }
     return () => {
       if (storyTimerRef.current) clearTimeout(storyTimerRef.current);
@@ -81,30 +87,27 @@ const StoryPage = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center p-8"
-      style={{
-        background: 'linear-gradient(135deg, #ff4757 0%, #ff6b81 50%, #ffffff 100%)'
-      }}
+      className="min-h-screen flex flex-col items-center justify-center p-8 bg-black"
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="w-full max-w-lg">
-        <div className="backdrop-blur-xl bg-white/20 rounded-3xl p-10 shadow-2xl border border-white/30 min-h-[400px] flex flex-col items-center justify-center">
-          <div className="text-2xl text-white text-center leading-relaxed mb-8">
+      <div className="w-full max-w-2xl">
+        <div className="min-h-[400px] flex flex-col items-center justify-center">
+          <p className="text-xl md:text-2xl text-white text-center leading-relaxed mb-8">
             {displayText}
-          </div>
+          </p>
         </div>
       </div>
 
-      <div className="fixed bottom-8 w-full max-w-md px-4">
-        <div className="backdrop-blur-md bg-white/20 rounded-2xl p-4 border border-white/30">
-          <div className="text-white text-center mb-2">
+      <div className="fixed bottom-12 w-full max-w-md px-4">
+        <div className="text-center">
+          <div className="text-gray-400 text-sm mb-3">
             长按屏幕5秒可跳过剧情
           </div>
-          <div className="w-full h-2 bg-white/30 rounded-full overflow-hidden">
+          <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden">
             <div
               className="h-full bg-white transition-all duration-100 rounded-full"
               style={{ width: `${Math.min((holdTime / 5) * 100, 100)}%` }}
