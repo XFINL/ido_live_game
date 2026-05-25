@@ -3,12 +3,16 @@ import { useNavigate } from 'react-router-dom';
 const HomePage = () => {
   const navigate = useNavigate();
 
+  const rooms = [
+    { id: 'bedroom', name: '卧室', x: 75, y: 50, color: '#ffaa66', size: 140, icon: '◆' },
+    { id: 'living', name: '客厅', x: 35, y: 50, color: '#66aaff', size: 160, icon: '●' },
+  ];
+
   return (
     <div
       className="min-h-screen flex flex-col"
       style={{ backgroundColor: 'rgb(0, 0, 0)' }}
     >
-      {/* 顶部导航 */}
       <div className="p-6 md:p-8 border-b" style={{ borderColor: 'rgb(23, 23, 23)' }}>
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <button
@@ -25,207 +29,206 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* 家的内容 */}
       <div className="flex-1 p-6 md:p-12">
-        <div className="max-w-5xl mx-auto">
-          {/* CSS绘制的家 */}
+        <div className="max-w-4xl mx-auto">
           <div
             className="relative w-full aspect-[4/3]"
             style={{
-              backgroundColor: 'rgb(20, 20, 20)',
-              borderRadius: '24px',
-              overflow: 'hidden'
+              backgroundColor: 'rgb(25, 25, 30)',
+              borderRadius: '20px',
+              overflow: 'hidden',
+              border: '2px solid rgb(50, 50, 60)'
             }}
           >
-            {/* 地板 */}
-            <div
-              className="absolute bottom-0 left-0 right-0"
-              style={{
-                height: '40%',
-                backgroundColor: 'rgb(35, 35, 35)',
-                backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(50,50,50,0.5) 40px, rgba(50,50,50,0.5) 42px)'
-              }}
-            />
+            {/* 网格地板 */}
+            <svg className="absolute inset-0 w-full h-full" style={{ opacity: 0.4 }}>
+              <defs>
+                <pattern id="floorGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+                  <rect width="30" height="30" fill="rgb(30, 30, 35)" />
+                  <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgb(45, 45, 50)" strokeWidth="1" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#floorGrid)" />
+            </svg>
 
             {/* 墙壁 */}
             <div
-              className="absolute top-0 left-0 right-0"
+              className="absolute"
               style={{
-                height: '60%',
-                backgroundColor: 'rgb(25, 25, 25)'
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '8%',
+                backgroundColor: 'rgb(40, 40, 45)',
+                borderBottom: '2px solid rgb(60, 60, 65)'
               }}
             />
-
-            {/* 客厅沙发 */}
             <div
               className="absolute"
               style={{
-                bottom: '20%',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '50%'
+                top: 0,
+                bottom: 0,
+                left: 0,
+                width: '4%',
+                backgroundColor: 'rgb(40, 40, 45)',
+                borderRight: '2px solid rgb(60, 60, 65)'
               }}
-            >
-              {/* 沙发座 */}
-              <div
-                className="w-full"
-                style={{
-                  height: '60px',
-                  backgroundColor: 'rgb(50, 50, 60)',
-                  borderRadius: '12px 12px 0 0'
-                }}
-              />
-              {/* 沙发靠背 */}
-              <div
-                className="w-full"
-                style={{
-                  height: '80px',
-                  marginTop: '-8px',
-                  backgroundColor: 'rgb(45, 45, 55)',
-                  borderRadius: '8px 8px 0 0'
-                }}
-              />
-            </div>
-
-            {/* 茶几 */}
+            />
             <div
               className="absolute"
               style={{
-                bottom: '28%',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '25%',
-                height: '40px',
-                backgroundColor: 'rgb(45, 35, 25)',
-                borderRadius: '8px',
-                boxShadow: '0 8px 20px rgba(0,0,0,0.5)'
+                top: 0,
+                bottom: 0,
+                right: 0,
+                width: '4%',
+                backgroundColor: 'rgb(40, 40, 45)',
+                borderLeft: '2px solid rgb(60, 60, 65)'
+              }}
+            />
+            <div
+              className="absolute"
+              style={{
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: '8%',
+                backgroundColor: 'rgb(40, 40, 45)',
+                borderTop: '2px solid rgb(60, 60, 65)'
               }}
             />
 
-            {/* 卧室门 */}
+            {/* 房间 */}
+            {rooms.map((room) => (
+              <div
+                key={room.id}
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
+                style={{
+                  left: `${room.x}%`,
+                  top: `${room.y}%`
+                }}
+                onClick={() => room.id === 'bedroom' && navigate('/bedroom')}
+              >
+                {/* 房间块 */}
+                <div
+                  className="relative transition-all duration-300 group-hover:scale-105"
+                  style={{
+                    width: `${room.size}px`,
+                    height: `${room.size * 0.7}px`,
+                    backgroundColor: `${room.color}15`,
+                    border: `3px solid ${room.color}50`,
+                    borderRadius: '12px'
+                  }}
+                >
+                  {/* 房间光晕 */}
+                  <div
+                    className="absolute -inset-4 rounded-2xl transition-all duration-300"
+                    style={{
+                      backgroundColor: room.color,
+                      opacity: room.id === 'bedroom' ? 0.15 : 0.08,
+                      filter: 'blur(12px)'
+                    }}
+                  />
+
+                  {/* 房间图标 */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div
+                      className="w-12 h-12 rounded-lg flex items-center justify-center mb-2"
+                      style={{ backgroundColor: `${room.color}30` }}
+                    >
+                      <span
+                        style={{
+                          color: room.color,
+                          fontSize: '24px',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        {room.icon}
+                      </span>
+                    </div>
+                    <span
+                      style={{
+                        color: room.color,
+                        fontSize: '14px',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {room.name}
+                    </span>
+                    {room.id === 'bedroom' && (
+                      <span
+                        className="text-xs mt-1"
+                        style={{ color: `${room.color}80` }}
+                      >
+                        点击进入
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* 走廊/连接 */}
             <div
-              className="absolute cursor-pointer hover:scale-105 transition-transform"
-              onClick={() => navigate('/bedroom')}
+              className="absolute"
               style={{
-                top: '15%',
+                top: '45%',
+                left: '52%',
+                width: '15%',
+                height: '10%',
+                backgroundColor: 'rgb(35, 35, 40)',
+                border: '1px dashed rgb(60, 60, 70)',
+                borderRadius: '4px'
+              }}
+            />
+
+            {/* 家具装饰 - 沙发 */}
+            <div
+              className="absolute"
+              style={{
+                left: '15%',
+                top: '45%',
+                width: '15%',
+                height: '8%',
+                backgroundColor: 'rgb(60, 60, 70)',
+                borderRadius: '6px',
+                border: '2px solid rgb(80, 80, 90)'
+              }}
+            />
+
+            {/* 家具装饰 - 桌子 */}
+            <div
+              className="absolute"
+              style={{
+                left: '20%',
+                top: '60%',
+                width: '8%',
+                height: '6%',
+                backgroundColor: 'rgb(50, 40, 35)',
+                borderRadius: '4px'
+              }}
+            />
+
+            {/* 家具装饰 - 电视 */}
+            <div
+              className="absolute"
+              style={{
                 left: '10%',
-                width: '120px',
-                height: '180px'
+                top: '30%',
+                width: '12%',
+                height: '7%',
+                backgroundColor: 'rgb(20, 20, 25)',
+                border: '2px solid rgb(60, 60, 70)',
+                borderRadius: '4px',
+                boxShadow: '0 0 20px rgba(100, 150, 200, 0.2)'
               }}
-            >
-              {/* 门 */}
-              <div
-                className="w-full h-full relative"
-                style={{
-                  backgroundColor: 'rgb(60, 45, 30)',
-                  borderRadius: '12px 12px 0 0',
-                  boxShadow: '0 0 40px rgba(255, 200, 150, 0.4), inset 0 0 60px rgba(255, 220, 180, 0.1)'
-                }}
-              >
-                {/* 门把手 */}
-                <div
-                  className="absolute"
-                  style={{
-                    right: '15px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '14px',
-                    height: '14px',
-                    backgroundColor: 'rgb(180, 150, 100)',
-                    borderRadius: '50%',
-                    boxShadow: '0 0 10px rgba(255, 220, 180, 0.5)'
-                  }}
-                />
-                {/* 门框发光 */}
-                <div
-                  className="absolute -inset-2"
-                  style={{
-                    borderRadius: '14px 14px 0 0',
-                    border: '2px solid rgba(255, 200, 150, 0.3)',
-                    pointerEvents: 'none'
-                  }}
-                />
-              </div>
-              {/* 门标签 */}
-              <div
-                className="text-center mt-3"
-                style={{
-                  color: 'rgba(255, 220, 180, 0.8)',
-                  fontSize: '14px',
-                  letterSpacing: '2px'
-                }}
-              >
-                卧室
-              </div>
-            </div>
-
-            {/* 楼梯 */}
-            <div
-              className="absolute"
-              style={{
-                bottom: '0',
-                right: '10%',
-                width: '200px'
-              }}
-            >
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <div
-                  key={i}
-                  className="absolute"
-                  style={{
-                    bottom: `${i * 4.5}%`,
-                    right: `${i * 2.5}%`,
-                    width: `${100 - i * 10}%`,
-                    height: '25px',
-                    backgroundColor: `rgb(${40 + i * 2}, ${40 + i * 2}, ${40 + i * 2})`,
-                    borderTop: '2px solid rgba(60,60,60,0.5)'
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* 顶灯 */}
-            <div
-              className="absolute"
-              style={{
-                top: '5%',
-                left: '50%',
-                transform: 'translateX(-50%)'
-              }}
-            >
-              <div
-                style={{
-                  width: '60px',
-                  height: '20px',
-                  backgroundColor: 'rgb(70, 70, 70)',
-                  borderRadius: '0 0 30px 30px',
-                  boxShadow: '0 20px 60px rgba(255, 255, 255, 0.4), 0 0 100px rgba(255, 255, 255, 0.2)'
-                }}
-              />
-              {/* 灯光效果 */}
-              <div
-                className="absolute"
-                style={{
-                  top: '15px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '0',
-                  height: '0',
-                  borderLeft: '120px solid transparent',
-                  borderRight: '120px solid transparent',
-                  borderTop: '180px solid rgba(255, 255, 240, 0.08)',
-                  pointerEvents: 'none'
-                }}
-              />
-            </div>
+            />
           </div>
         </div>
       </div>
 
-      {/* 底部提示 */}
       <div className="p-6 border-t" style={{ borderColor: 'rgb(23, 23, 23)' }}>
         <div className="max-w-6xl mx-auto text-center">
-          <p className="text-gray-500 text-sm">点击卧室门进入你的房间</p>
+          <p className="text-gray-500 text-sm">点击房间进入</p>
         </div>
       </div>
     </div>

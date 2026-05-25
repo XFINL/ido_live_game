@@ -1,11 +1,48 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// 创建打字机音效
+const createTypeSound = () => {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return null;
+    const audioContext = new AudioContext();
+    
+    const playTypeSound = () => {
+      try {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.05);
+        
+        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.05);
+      } catch (e) {
+        console.log('Audio not available');
+      }
+    };
+    
+    return playTypeSound;
+  } catch (e) {
+    return null;
+  }
+};
 
 const StoryPage = () => {
   const navigate = useNavigate();
   const [holdTime, setHoldTime] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
   const storyTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const typeSoundRef = useRef<(() => void) | null>(null);
+  const lastCharIndexRef = useRef(-1);
 
   const storyContent = [
     '大学毕业了...',
@@ -27,11 +64,22 @@ const StoryPage = () => {
   const [displayText, setDisplayText] = useState('');
   const [charIndex, setCharIndex] = useState(0);
 
+  // 初始化音效
+  useEffect(() => {
+    typeSoundRef.current = createTypeSound();
+  }, []);
+
   useEffect(() => {
     if (currentTextIndex < storyContent.length) {
       const currentSentence = storyContent[currentTextIndex];
       if (charIndex < currentSentence.length) {
         const timer = setTimeout(() => {
+          // 播放打字音效（非空格时）
+          if (charIndex > lastCharIndexRef.current && currentSentence[charIndex] !== ' ' && typeSoundRef.current) {
+            typeSoundRef.current();
+          }
+          lastCharIndexRef.current = charIndex;
+          
           setDisplayText((prev) => prev + currentSentence[charIndex]);
           setCharIndex((prev) => prev + 1);
         }, 80);

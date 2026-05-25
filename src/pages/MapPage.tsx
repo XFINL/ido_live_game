@@ -3,12 +3,19 @@ import { useNavigate } from 'react-router-dom';
 const MapPage = () => {
   const navigate = useNavigate();
 
+  const locations = [
+    { id: 'home', name: '家', x: 50, y: 50, color: '#ffcc66', size: 24, icon: '◆' },
+    { id: 'studio', name: '练习室', x: 25, y: 30, color: '#66ccff', size: 18, icon: '●' },
+    { id: 'stage', name: '演出场地', x: 80, y: 25, color: '#ff66cc', size: 20, icon: '★' },
+    { id: 'shop', name: '商店', x: 70, y: 70, color: '#66ff88', size: 16, icon: '■' },
+    { id: 'park', name: '公园', x: 30, y: 75, color: '#88ffaa', size: 18, icon: '▲' },
+  ];
+
   return (
     <div
       className="min-h-screen flex flex-col"
       style={{ backgroundColor: 'rgb(0, 0, 0)' }}
     >
-      {/* 顶部导航 */}
       <div className="p-6 md:p-8 border-b" style={{ borderColor: 'rgb(23, 23, 23)' }}>
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <button
@@ -25,27 +32,36 @@ const MapPage = () => {
         </div>
       </div>
 
-      {/* 地图内容 */}
-      <div className="flex-1 p-6 md:p-12 overflow-auto">
+      <div className="flex-1 p-6 md:p-12">
         <div className="max-w-4xl mx-auto">
-          {/* CSS绘制的地图 */}
           <div
             className="relative w-full aspect-square"
             style={{
-              backgroundColor: 'rgb(25, 25, 25)',
-              borderRadius: '24px',
-              overflow: 'hidden'
+              backgroundColor: 'rgb(20, 20, 25)',
+              borderRadius: '20px',
+              overflow: 'hidden',
+              border: '2px solid rgb(40, 40, 50)'
             }}
           >
-            {/* 道路网络 */}
+            {/* 网格背景 */}
+            <svg className="absolute inset-0 w-full h-full" style={{ opacity: 0.3 }}>
+              <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgb(60, 60, 70)" strokeWidth="1" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+
+            {/* 道路 */}
             <div
               className="absolute"
               style={{
                 top: '50%',
-                left: '0',
-                right: '0',
-                height: '40px',
-                backgroundColor: 'rgb(45, 45, 45)',
+                left: 0,
+                right: 0,
+                height: '12px',
+                backgroundColor: 'rgb(45, 45, 55)',
                 transform: 'translateY(-50%)'
               }}
             />
@@ -53,200 +69,102 @@ const MapPage = () => {
               className="absolute"
               style={{
                 left: '50%',
-                top: '0',
-                bottom: '0',
-                width: '40px',
-                backgroundColor: 'rgb(45, 45, 45)',
+                top: 0,
+                bottom: 0,
+                width: '12px',
+                backgroundColor: 'rgb(45, 45, 55)',
                 transform: 'translateX(-50%)'
               }}
             />
 
-            {/* 家的建筑 */}
-            <div
-              className="absolute cursor-pointer hover:scale-105 transition-transform"
-              onClick={() => navigate('/home')}
-              style={{
-                top: '25%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '200px',
-                height: '220px'
-              }}
-            >
-              {/* 墙体 */}
+            {/* 地点点 */}
+            {locations.map((loc) => (
               <div
-                className="w-full h-full relative"
+                key={loc.id}
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
                 style={{
-                  backgroundColor: 'rgb(35, 35, 35)',
-                  borderRadius: '12px',
-                  border: '2px solid rgb(50, 50, 50)'
+                  left: `${loc.x}%`,
+                  top: `${loc.y}%`
                 }}
+                onClick={() => loc.id === 'home' && navigate('/home')}
               >
-                {/* 屋顶 */}
+                {/* 外圈光晕 */}
                 <div
-                  className="absolute"
+                  className="absolute -inset-4 rounded-full transition-all duration-300 group-hover:-inset-6"
                   style={{
-                    top: '-40px',
-                    left: '-10px',
-                    right: '-10px',
-                    height: '50px',
-                    backgroundColor: 'rgb(55, 55, 55)',
-                    clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
+                    backgroundColor: loc.color,
+                    opacity: loc.id === 'home' ? 0.3 : 0.15,
+                    filter: 'blur(8px)'
                   }}
                 />
 
-                {/* 门 */}
+                {/* 主点 */}
                 <div
-                  className="absolute"
+                  className="relative flex items-center justify-center rounded-full transition-all duration-300 group-hover:scale-125"
                   style={{
-                    bottom: '0',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '60px',
-                    height: '100px',
-                    backgroundColor: 'rgb(70, 50, 30)',
-                    borderRadius: '8px 8px 0 0',
-                    boxShadow: '0 0 30px rgba(255, 170, 68, 0.4)'
+                    width: `${loc.size}px`,
+                    height: `${loc.size}px`,
+                    backgroundColor: loc.color,
+                    boxShadow: `0 0 20px ${loc.color}40, 0 0 40px ${loc.color}20`,
+                    zIndex: 10
                   }}
                 >
-                  <div
-                    className="absolute"
-                    style={{
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: '10px',
-                      height: '10px',
-                      backgroundColor: 'rgb(200, 150, 80)',
-                      borderRadius: '50%'
-                    }}
-                  />
+                  <span style={{ color: '#000', fontWeight: 'bold', fontSize: `${loc.size * 0.5}px` }}>
+                    {loc.icon}
+                  </span>
                 </div>
 
-                {/* 窗户 */}
+                {/* 名称标签 */}
                 <div
-                  className="absolute"
+                  className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1 rounded-full transition-all duration-300 group-hover:translate-y-1"
                   style={{
-                    top: '50px',
-                    left: '25px',
-                    width: '45px',
-                    height: '55px',
-                    backgroundColor: 'rgb(50, 70, 100)',
-                    borderRadius: '4px',
-                    boxShadow: '0 0 20px rgba(100, 150, 200, 0.3)'
-                  }}
-                />
-                <div
-                  className="absolute"
-                  style={{
-                    top: '50px',
-                    right: '25px',
-                    width: '45px',
-                    height: '55px',
-                    backgroundColor: 'rgb(50, 70, 100)',
-                    borderRadius: '4px',
-                    boxShadow: '0 0 20px rgba(100, 150, 200, 0.3)'
-                  }}
-                />
-
-                {/* 门牌号 */}
-                <div
-                  className="absolute"
-                  style={{
-                    top: '15px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    padding: '4px 12px',
-                    backgroundColor: 'rgba(100, 80, 50, 0.8)',
-                    borderRadius: '4px',
-                    color: 'rgb(220, 200, 160)',
+                    backgroundColor: 'rgba(23, 23, 23, 0.95)',
+                    color: loc.color,
                     fontSize: '12px',
-                    letterSpacing: '2px'
+                    whiteSpace: 'nowrap',
+                    border: `1px solid ${loc.color}40`
                   }}
                 >
-                  HOME
+                  {loc.name}
+                  {loc.id === 'home' && <span className="text-gray-400 ml-1">点击进入</span>}
                 </div>
-              </div>
-
-              {/* 点击提示 */}
-              <div
-                className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-center"
-                style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}
-              >
-                点击进入
-              </div>
-            </div>
-
-            {/* 装饰性树木 */}
-            {[
-              { left: '10%', top: '15%' },
-              { left: '85%', top: '20%' },
-              { left: '15%', top: '80%' },
-              { left: '80%', top: '85%' },
-              { left: '10%', top: '55%' },
-              { left: '88%', top: '50%' }
-            ].map((pos, i) => (
-              <div
-                key={i}
-                className="absolute"
-                style={{
-                  left: pos.left,
-                  top: pos.top,
-                  width: '30px',
-                  height: '40px'
-                }}
-              >
-                <div
-                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
-                  style={{
-                    width: '8px',
-                    height: '15px',
-                    backgroundColor: 'rgb(40, 30, 20)'
-                  }}
-                />
-                <div
-                  className="absolute top-0 left-1/2 transform -translate-x-1/2"
-                  style={{
-                    width: '26px',
-                    height: '26px',
-                    backgroundColor: 'rgb(25, 50, 25)',
-                    borderRadius: '50%'
-                  }}
-                />
               </div>
             ))}
 
-            {/* 道路装饰线 */}
+            {/* 玩家当前位置指示 */}
             <div
-              className="absolute"
-              style={{
-                top: '50%',
-                left: '0',
-                right: '0',
-                height: '2px',
-                transform: 'translateY(-50%)',
-                backgroundImage: 'repeating-linear-gradient(90deg, rgb(80, 80, 80) 0, rgb(80, 80, 80) 20px, transparent 20px, transparent 40px)'
-              }}
-            />
-            <div
-              className="absolute"
+              className="absolute transform -translate-x-1/2 -translate-y-1/2"
               style={{
                 left: '50%',
-                top: '0',
-                bottom: '0',
-                width: '2px',
-                transform: 'translateX(-50%)',
-                backgroundImage: 'repeating-linear-gradient(180deg, rgb(80, 80, 80) 0, rgb(80, 80, 80) 20px, transparent 20px, transparent 40px)'
+                top: '50%',
+                zIndex: 20
               }}
-            />
+            >
+              <div
+                className="w-6 h-6 rounded-full animate-pulse"
+                style={{
+                  backgroundColor: '#fff',
+                  boxShadow: '0 0 20px #fff, 0 0 40px #fff'
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 底部提示 */}
       <div className="p-6 border-t" style={{ borderColor: 'rgb(23, 23, 23)' }}>
-        <div className="max-w-6xl mx-auto text-center">
-          <p className="text-gray-500 text-sm">探索城市地图，找到回家的路</p>
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-wrap justify-center gap-6">
+            {locations.map((loc) => (
+              <div key={loc.id} className="flex items-center gap-2">
+                <div
+                  className="w-4 h-4 rounded-full"
+                  style={{ backgroundColor: loc.color }}
+                />
+                <span className="text-gray-400 text-sm">{loc.name}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
