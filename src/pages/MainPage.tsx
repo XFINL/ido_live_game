@@ -33,7 +33,7 @@ const MainPage = () => {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white mb-1">{stageName}</h2>
-              <p className="text-gray-500">欢迎来到你的星途</p>
+              <p className="text-gray-500">欢迎来到铃的世界</p>
             </div>
           </div>
         </div>

@@ -26,7 +26,7 @@ const StartPage = () => {
           style={{ backgroundColor: 'rgba(23, 23, 23, 0.9)', borderColor: 'rgb(23, 23, 23)' }}
         >
           <h1 className="text-4xl font-bold text-center mb-8 text-white drop-shadow-lg">
-            星途
+            铃
           </h1>
 
           <div className="mb-6">
@@ -37,9 +37,9 @@ const StartPage = () => {
                 className={`py-4 px-6 rounded-2xl backdrop-blur-md border transition-all duration-300 ${
                   gender === 'male'
                     ? 'bg-white/20 shadow-lg'
-                    : 'bg-gray-900/50 hover:bg-gray-800/50'
+                    : 'hover:bg-white/10'
                 }`}
-                style={{ borderColor: 'rgb(23, 23, 23)' }}
+                style={{ backgroundColor: 'rgb(23, 23, 23)', borderColor: 'rgb(23, 23, 23)' }}
               >
                 <div className="text-white font-semibold">男</div>
               </button>
@@ -48,9 +48,9 @@ const StartPage = () => {
                 className={`py-4 px-6 rounded-2xl backdrop-blur-md border transition-all duration-300 ${
                   gender === 'female'
                     ? 'bg-white/20 shadow-lg'
-                    : 'bg-gray-900/50 hover:bg-gray-800/50'
+                    : 'hover:bg-white/10'
                 }`}
-                style={{ borderColor: 'rgb(23, 23, 23)' }}
+                style={{ backgroundColor: 'rgb(23, 23, 23)', borderColor: 'rgb(23, 23, 23)' }}
               >
                 <div className="text-white font-semibold">女</div>
               </button>
@@ -68,13 +68,13 @@ const StartPage = () => {
               placeholder="请输入你的艺名"
               className={`w-full py-4 px-6 rounded-2xl border transition-all duration-500 ${
                 inputFocused
-                  ? 'bg-gray-800 shadow-lg shadow-white/20'
+                  ? 'shadow-lg shadow-white/20'
                   : nameInput
-                  ? 'bg-gray-900'
-                  : 'bg-gray-900 animate-pulse'
+                  ? ''
+                  : 'animate-pulse'
               } text-white placeholder-gray-400 focus:outline-none`}
               style={{
-                backgroundColor: inputFocused ? 'rgb(23, 23, 23)' : 'rgb(23, 23, 23)',
+                backgroundColor: 'rgb(23, 23, 23)',
                 borderColor: 'rgb(23, 23, 23)',
                 boxShadow: inputFocused ? '0 0 0 2px rgba(255, 255, 255, 0.1)' : 'none'
               }}
@@ -94,7 +94,7 @@ const StartPage = () => {
               borderColor: 'rgb(23, 23, 23)'
             }}
           >
-            开始旅程
+            开始游戏
           </button>
         </div>
       </div>
